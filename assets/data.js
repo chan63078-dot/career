@@ -302,6 +302,26 @@
     return { axes, basics, aiScore, jobs };
   }
 
-  const api = { VERSION, LIKERT, AXES, BASICS, PARTS, ITEMS, CATS, JOBS, JOB_BY_ID, score };
+  // ───────── 불성실 응답 점검 ─────────
+  // 결과를 그대로 믿기 어려운 응답을 찾아 이유를 돌려줌 (빈 배열 = 문제 없음)
+  const MIN_SECONDS = 240;   // 87문항을 4분 안에 끝내면 문항을 거의 읽지 않은 것
+  function checkQuality(answers, durationSec) {
+    const reasons = [];
+    const a = answers.filter(Boolean);
+    if (!a.length) return reasons;
+    const counts = [1, 2, 3, 4, 5].map(v => a.filter(x => x === v).length);
+    const top = Math.max(...counts);
+    if (top / a.length >= 0.8) reasons.push(`${a.length}문항 중 ${top}문항을 같은 번호(${counts.indexOf(top) + 1})로 골랐어요`);
+    let run = 1, longest = 1;
+    for (let i = 1; i < a.length; i++) { run = a[i] === a[i - 1] ? run + 1 : 1; longest = Math.max(longest, run); }
+    if (longest >= 25 && top / a.length < 0.8) reasons.push(`같은 번호를 ${longest}문항 연속으로 골랐어요`);
+    if (durationSec > 0 && durationSec < MIN_SECONDS) reasons.push(`검사를 ${Math.max(1, Math.round(durationSec / 60))}분 만에 끝냈어요 (보통 15~20분)`);
+    return reasons;
+  }
+
+  // ───────── 상담 진행 상태 (관리자) ─────────
+  const STATUSES = ['신규', '연락 완료', '상담 완료', '등록', '보류'];
+
+  const api = { VERSION, LIKERT, AXES, BASICS, PARTS, ITEMS, CATS, JOBS, JOB_BY_ID, STATUSES, score, checkQuality };
   if (typeof module !== 'undefined') module.exports = api; else root.CAREER = api;
 })(this);

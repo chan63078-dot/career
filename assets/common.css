@@ -113,4 +113,47 @@ button { font: inherit; cursor: pointer; }
   .job-head { grid-template-columns: auto minmax(0, 1fr); }
   .job-head .pct { grid-column: 1 / -1; text-align: left; display: flex; align-items: baseline; gap: 8px; }
 }
+/* ───── 상담 상태 표시 ───── */
+.status { display: inline-block; font-size: var(--s-xs); padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; line-height: 1.6; }
+.status.s0 { color: var(--mark); }
+.status.s1 { color: var(--warn); }
+.status.s2 { color: var(--ink); }
+.status.s3 { color: var(--good); }
+.status.s4 { color: var(--muted); }
+.flag { display: inline-block; font-size: var(--s-xs); color: var(--warn); border: 1px dashed var(--warn); border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+
+/* ───── A4 결과지 (인쇄 전용) ───── */
+#printRoot { display: none; }
+@page { size: A4; margin: 14mm; }
+@media print {
+  body > *:not(#printRoot) { display: none !important; }
+  #printRoot { display: block; }
+  html, body { background: #fff !important; }
+  #printRoot {
+    --bg: #f3f5f7; --paper: #fff; --fg: #162030; --muted: #5b6676; --line: #d8dee6;
+    --mark: #c8325a; --ink: #1d3a8a; --ink-soft: #e4eaf8; --good: #1f7a4d; --warn: #a15c00; --c-ai: #7a4fd0;
+    color: var(--fg); font-size: 10pt; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+}
+.ps { display: grid; gap: 12px; }
+.ps h1 { font-size: 20pt; }
+.ps h2 { font-size: 12pt; margin-bottom: 6px; display: flex; gap: 10px; align-items: baseline; }
+.ps h3 { font-size: 11pt; }
+.ps-head { border-bottom: 2px solid var(--mark); padding-bottom: 8px; display: grid; gap: 2px; }
+.ps-profile { display: grid; grid-template-columns: 62mm 1fr; gap: 10mm; align-items: center; }
+.ps-profile svg { width: 62mm; height: auto; }
+.ps .bar-row { grid-template-columns: 7rem 1fr 2.4rem; }
+.ps .basics { grid-template-columns: repeat(4, 1fr); }
+.ps .basics div { padding: 6px 10px; }
+.ps-table { width: 100%; border-collapse: collapse; }
+.ps-table th, .ps-table td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ps-table th { color: var(--muted); font-weight: 500; }
+.ps-jobs { display: grid; gap: 8px; break-before: page; }
+.ps-job { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; display: grid; gap: 3px; break-inside: avoid; }
+.ps-memo { break-inside: avoid; }
+.ps-memo-text { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.ps-lines { display: grid; gap: 0; }
+.ps-lines i { display: block; height: 9mm; border-bottom: 1px solid var(--line); }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

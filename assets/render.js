@@ -86,5 +86,54 @@
     </section>`;
   }
 
-  window.RENDER = { esc, pct, radar, axisBars, basicsGrid, jobCard, profilePanel, topAxes, level };
+  // ───── A4 결과지 인쇄 (학생 결과 화면 · 관리자 상세에서 함께 씀) ─────
+  // o: { name, birth, affiliation, date, res, memo, mentor }
+  function printSheet(o) {
+    const res = o.res, top = topAxes(res.axes), top3 = res.jobs.slice(0, 3);
+    const academy = (window.APP_CONFIG && window.APP_CONFIG.ACADEMY) || '';
+    const memoLines = o.memo ? `<p class="ps-memo-text">${esc(o.memo).replace(/\n/g, '<br>')}</p>` : '<div class="ps-lines"><i></i><i></i><i></i><i></i></div>';
+    let root = document.getElementById('printRoot');
+    if (!root) { root = document.createElement('div'); root.id = 'printRoot'; document.body.appendChild(root); }
+    root.innerHTML = `<article class="ps">
+      <header class="ps-head">
+        <span class="eyebrow">${esc(academy)} · IT · AI 진로적성검사 결과지</span>
+        <h1>${esc(o.name)}</h1>
+        <p>${[o.birth && '생년월일 ' + esc(o.birth), o.affiliation && esc(o.affiliation), '검사일 ' + esc(o.date)].filter(Boolean).join(' · ')}</p>
+      </header>
+      <section class="ps-profile">
+        ${radar(res.axes)}
+        <div>
+          <h2>${top.map(a => a.name).join(' · ')} 성향이 강해요</h2>
+          <p class="note">${top[0].desc}.</p>
+          ${axisBars(res.axes, res.aiScore)}
+        </div>
+      </section>
+      <section><h2>기초 소양</h2>${basicsGrid(res.basics)}</section>
+      <section>
+        <h2>잘 맞는 직무 TOP 3</h2>
+        <table class="ps-table">
+          <thead><tr><th>순위</th><th>직무</th><th>적합도</th><th>${esc(academy)}에서 배우는 과정</th></tr></thead>
+          <tbody>${top3.map((r, i) => `<tr><td>${i + 1}</td><td><b>${r.job.name}</b></td><td class="mono">${r.pct}%</td><td>${esc(r.job.course || '')}</td></tr>`).join('')}</tbody>
+        </table>
+      </section>
+      <section class="ps-jobs">
+        ${top3.map((r, i) => `<div class="ps-job">
+          <h3>${i + 1}. ${r.job.name}</h3>
+          <p>${r.job.desc}</p>
+          <p><b>로드맵</b> ${r.job.road.map((s, k) => `${k + 1}) ${s}`).join('  ')}</p>
+          <p><b>추천 자격증</b> ${r.job.certs.join(', ')}${r.job.salary ? ` · <b>예상 연봉</b> ${r.job.salary}` : ''}</p>
+        </div>`).join('')}
+      </section>
+      <section class="ps-memo">
+        <h2>상담 메모 ${o.mentor ? `<span class="note">담당 멘토: ${esc(o.mentor)}</span>` : ''}</h2>
+        ${memoLines}
+      </section>
+      <footer class="note">이 결과는 진로 탐색을 돕는 참고 자료예요. 결과만으로 진로가 정해지지 않으니 담당 멘토와 함께 이야기해 주세요.</footer>
+    </article>`;
+    const clean = () => { root.innerHTML = ''; window.removeEventListener('afterprint', clean); };
+    window.addEventListener('afterprint', clean);
+    window.print();
+  }
+
+  window.RENDER = { esc, pct, radar, axisBars, basicsGrid, jobCard, profilePanel, topAxes, level, printSheet };
 })();

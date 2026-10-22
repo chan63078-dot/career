@@ -133,7 +133,7 @@
 <script src="assets/api.js"></script>
 <script>
 const { PARTS, ITEMS, LIKERT, JOBS, CATS, score, VERSION } = window.CAREER;
-const { esc, profilePanel, basicsGrid, jobCard } = window.RENDER;
+const { esc, profilePanel, basicsGrid, jobCard, printSheet } = window.RENDER;
 const CFG = window.APP_CONFIG || {};
 const $ = s => document.querySelector(s);
 const STEP_NAMES = ['정보 입력', ...PARTS.map((p, i) => 'Part ' + (i + 1)), '결과'];
@@ -238,6 +238,7 @@ function renderResult() {
   $('#main').innerHTML = `<div class="result">
     <div class="saved" id="saved"></div>
     <div class="tools">
+      <button class="btn" type="button" id="btnPrint">결과지 인쇄 · PDF 저장</button>
       <button class="btn" type="button" id="btnCopy">결과 텍스트 복사</button>
       <button class="btn" type="button" id="btnNew">다음 학생 검사 시작</button>
     </div>
@@ -256,6 +257,7 @@ function renderResult() {
   </div>`;
   renderSaved();
   $('#btnCopy').onclick = copyResult;
+  $('#btnPrint').onclick = () => printSheet({ name: state.info.name, birth: state.info.birth, affiliation: state.info.affiliation, date: new Date().toLocaleDateString('ko-KR'), res });
   $('#btnNew').onclick = startOver;
 }
 function renderSaved() {
@@ -279,6 +281,7 @@ async function submit() {
       action: 'submit', version: VERSION,
       name: state.info.name, birth: state.info.birth, phone: state.info.phone, affiliation: state.info.affiliation, consent: true,
       answers: state.answers.join(''),
+      durationSec: state.startedAt ? Math.max(1, Math.round((Date.now() - state.startedAt) / 1000)) : 0,
       top: r.jobs.slice(0, 3).map(x => ({ id: x.job.id, name: x.job.name, pct: x.pct })),
       axes: round(r.axes), basics: round(r.basics), ai: Math.round(r.aiScore * 100),
     });
@@ -331,7 +334,7 @@ function go(step) {
 }
 function next() {
   const s = state.step;
-  if (s === 0) { if (validateInfo()) go(1); return; }
+  if (s === 0) { if (validateInfo()) { if (!state.startedAt) state.startedAt = Date.now(); go(1); } return; }
   const miss = firstMissing(s - 1);
   if (miss) {
     ITEMS.filter(it => it.part === s - 1 && !state.answers[it.no - 1]).forEach(it => $('#row' + it.no).classList.add('missing'));
