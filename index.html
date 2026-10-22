@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IT·AI 진로적성검사</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+.wrap { max-width: 800px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 130px; display: grid; gap: 22px; }
+.head { display: grid; gap: 10px; }
+.head h1 { font-size: var(--s-xl); font-weight: 700; letter-spacing: -.01em; }
+.head .lede { color: var(--muted); max-width: 62ch; }
+
+.steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.steps li { font-size: var(--s-xs); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.steps li.on { border-color: var(--mark); color: var(--mark); font-weight: 700; }
+.steps li.done { color: var(--fg); }
+
+.sheet { background: var(--paper); border: 1px solid var(--line); border-top: 4px solid var(--mark); border-radius: 4px; }
+.sheet-head { padding: 18px 20px 12px; display: grid; gap: 2px; border-bottom: 1px solid var(--line); }
+.sheet-head h2 { font-size: var(--s-md); }
+.sheet-head .hint { color: var(--muted); font-size: var(--s-xs); }
+
+/* 학생 정보 */
+.info { padding: 20px; display: grid; gap: 16px; }
+.info .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.consent { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 8px; font-size: var(--s-xs); }
+.consent table { border-collapse: collapse; width: 100%; }
+.consent th, .consent td { text-align: left; padding: 4px 8px 4px 0; vertical-align: top; border-bottom: 1px solid var(--line); }
+.consent th { color: var(--muted); font-weight: 500; white-space: nowrap; width: 6.5rem; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: var(--s-sm); font-weight: 500; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--mark); flex: none; }
+
+/* 5점 척도 */
+.lk { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 20px 11px 14px; border-bottom: 1px dashed var(--line); }
+.lk:last-child { border-bottom: 0; }
+.lk .no { font-family: var(--font-mono); font-size: var(--s-xs); color: var(--mark); font-weight: 600; }
+.lk .txt { min-width: 0; }
+.lk.missing { background: var(--mark-soft); }
+.opts { display: grid; grid-template-columns: repeat(5, 2.75rem); justify-items: center; margin: 0; padding: 0; border: 0; }
+.opt { display: grid; justify-items: center; gap: 2px; cursor: pointer; }
+.opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.opt .bubble { width: 1.75rem; height: 1.75rem; border: 1.5px solid var(--mark); border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: var(--s-xs); color: var(--mark); transition: background .1s; }
+.opt input:checked + .bubble { background: var(--mark); color: var(--on-mark); }
+.opt input:focus-visible + .bubble { outline: 2px solid var(--ink); outline-offset: 2px; }
+.opt .cap { display: none; font-size: .6875rem; color: var(--muted); white-space: nowrap; }
+.lk.legend { padding-block: 8px; background: var(--bg); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; border-bottom: 1px solid var(--line); }
+.lk.legend .opts span { font-size: .6875rem; color: var(--muted); text-align: center; line-height: 1.25; }
+
+/* 하단 바 */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); z-index: 10;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.bar-in { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+.progress { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.progress .label { font-size: var(--s-xs); color: var(--muted); }
+.progress .label b { color: var(--fg); }
+.track { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.track i { display: block; height: 100%; background: var(--mark); width: 0; transition: width .2s; }
+
+/* 결과 */
+.result { display: grid; gap: 22px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.saved { border-radius: 6px; padding: 10px 12px; font-size: var(--s-sm); border: 1px solid var(--line); background: var(--paper); display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.saved.ok { border-color: var(--good); color: var(--good); }
+.saved.fail { border-color: var(--mark); color: var(--mark); }
+.result > section > h2 { font-size: var(--s-lg); }
+.top3, .all { display: grid; gap: 12px; }
+.all details { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
+.all summary { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) 7rem 2.8rem; gap: 12px; align-items: center; padding: 12px 16px; cursor: pointer; }
+.all summary::-webkit-details-marker { display: none; }
+.all summary .nm { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.all summary .nm b { font-weight: 500; }
+.all summary .nm span { font-size: var(--s-xs); }
+.all summary .t { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.all summary .t i { display: block; height: 100%; background: var(--ink); }
+.all summary .v { text-align: right; font-size: var(--s-xs); color: var(--muted); }
+.all details[open] summary { border-bottom: 1px solid var(--line); }
+.all details .job { border: 0; border-radius: 0; }
+
+.disclaimer { font-size: var(--s-xs); color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 4px; }
+
+@media (max-width: 640px) {
+  .head h1 { font-size: 1.55rem; }
+  .info .grid { grid-template-columns: minmax(0, 1fr); }
+  .lk { grid-template-columns: 2rem minmax(0, 1fr); padding: 12px 12px 12px 10px; row-gap: 10px; }
+  .lk .opts { grid-column: 1 / -1; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .opt .cap { display: block; }
+  .lk.legend { display: none; }
+  .all summary { grid-template-columns: minmax(0, 1fr) 2.8rem; }
+  .all summary .t { display: none; }
+  .bar .btn { padding-inline: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <span class="eyebrow" id="academy">IT · AI 직무 네비게이션</span>
+    <h1>IT·AI 진로적성검사</h1>
+    <p class="lede" id="lede">문장을 읽고 내 모습과 가장 가까운 답을 골라 주세요. 오래 고민하기보다 처음 떠오르는 답이 더 정확해요. 4개 파트, 약 15분 걸려요.</p>
+    <ol class="steps" id="steps"></ol>
+  </header>
+
+  <main id="main"></main>
+
+  <footer class="disclaimer">
+    <p>이 검사는 진로 탐색을 돕는 참고용 도구예요. 결과만으로 진로가 정해지지 않으니, 담당 멘토와 상담하면서 함께 결정해 주세요.</p>
+    <p>직무는 학원 과정으로 취업하거나 경력을 넓혀 갈 수 있는 분야 16개로 골랐어요. 직무 정보 출처는 「IT · AI 직무 둘러보기」 자료 2026-10-v3이고, 연봉 · 준비 기간은 참고 범위예요. "자료 밖 직무"는 아직 수치 근거를 확인하지 않았어요.</p>
+  </footer>
+</div>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="progress">
+      <span class="label" id="barLabel"></span>
+      <div class="track"><i id="barFill"></i></div>
+    </div>
+    <button class="btn" id="btnDemo" type="button" hidden>예시 응답</button>
+    <button class="btn" id="btnPrev" type="button">이전</button>
+    <button class="btn primary" id="btnNext" type="button">다음</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/render.js"></script>
+<script src="assets/api.js"></script>
+<script>
+const { PARTS, ITEMS, LIKERT, JOBS, CATS, score, VERSION } = window.CAREER;
+const { esc, profilePanel, basicsGrid, jobCard } = window.RENDER;
+const CFG = window.APP_CONFIG || {};
+const $ = s => document.querySelector(s);
+const STEP_NAMES = ['정보 입력', ...PARTS.map((p, i) => 'Part ' + (i + 1)), '결과'];
+const RESULT_STEP = PARTS.length + 1;
+const DEMO = /[?&]demo\b/.test(location.search);
+
+// 진행 상태 — 같은 기기를 여러 학생이 쓸 수 있어서 탭을 닫으면 지워지는 sessionStorage에만 둠
+const KEY = 'itai-test-progress';
+let state = { step: 0, info: { name: '', birth: '', phone: '', affiliation: '', consent: false }, answers: Array(ITEMS.length).fill(0) };
+try { const s = JSON.parse(sessionStorage.getItem(KEY)); if (s && s.answers && s.answers.length === ITEMS.length) state = s; } catch (e) {}
+const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+let result = null, saveState = null;
+
+if (CFG.ACADEMY) $('#academy').textContent = CFG.ACADEMY + ' · IT · AI 직무 네비게이션';
+$('#btnDemo').hidden = !DEMO;
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2200); }
+
+function renderSteps() {
+  $('#steps').innerHTML = STEP_NAMES.map((n, i) => `<li class="${i === state.step ? 'on' : i < state.step ? 'done' : ''}">${n}</li>`).join('');
+}
+
+// ───── 0. 학생 정보 ─────
+function renderInfo() {
+  const f = state.info;
+  $('#main').innerHTML = `<section class="sheet">
+    <div class="sheet-head"><h2>학생 정보</h2><span class="hint">상담할 때 결과를 찾을 수 있도록 입력해 주세요</span></div>
+    <form class="info" id="infoForm" novalidate>
+      <div class="grid">
+        <div class="field"><label for="fName">이름</label><input id="fName" autocomplete="name" value="${esc(f.name)}" required><span class="err" data-for="name"></span></div>
+        <div class="field"><label for="fBirth">생년월일</label><input id="fBirth" type="date" value="${esc(f.birth)}" min="1940-01-01" max="2025-12-31" required><span class="err" data-for="birth"></span></div>
+        <div class="field"><label for="fPhone">연락처</label><input id="fPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" value="${esc(f.phone)}" required><span class="err" data-for="phone"></span></div>
+        <div class="field"><label for="fAff">소속 (선택)</label><input id="fAff" placeholder="예: ○○고 2학년, 대학생, 직장인" value="${esc(f.affiliation)}"></div>
+      </div>
+      <div class="consent">
+        <strong>개인정보 수집 · 이용 동의</strong>
+        <table>
+          <tr><th>수집 항목</th><td>이름, 생년월일, 연락처, 소속, 검사 응답과 결과</td></tr>
+          <tr><th>이용 목적</th><td>진로 상담, 맞춤형 교육과정 안내</td></tr>
+          <tr><th>보유 기간</th><td>${esc(CFG.RETENTION || '검사일로부터 1년')} (요청하면 바로 삭제)</td></tr>
+        </table>
+        <p class="note">동의하지 않을 수 있지만, 동의하지 않으면 검사 결과를 저장하고 상담에 활용할 수 없어요. 만 14세 미만은 보호자 동의가 필요해요.</p>
+        <label class="check"><input type="checkbox" id="fConsent" ${f.consent ? 'checked' : ''}> 위 내용을 읽었고 개인정보 수집 · 이용에 동의합니다.</label>
+        <span class="err" data-for="consent" style="font-size:var(--s-xs);color:var(--mark)"></span>
+      </div>
+    </form>
+  </section>`;
+  $('#fPhone').addEventListener('input', e => {
+    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+    e.target.value = d.length < 4 ? d : d.length < 8 ? `${d.slice(0, 3)}-${d.slice(3)}` : d.length < 11 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  });
+  $('#infoForm').addEventListener('input', readInfo);
+  $('#infoForm').addEventListener('submit', e => { e.preventDefault(); next(); });
+}
+function readInfo() {
+  state.info = { name: $('#fName').value.trim(), birth: $('#fBirth').value, phone: $('#fPhone').value.trim(), affiliation: $('#fAff').value.trim(), consent: $('#fConsent').checked };
+  persist();
+}
+function validateInfo() {
+  readInfo();
+  const f = state.info, err = {};
+  if (f.name.length < 2) err.name = '이름을 2글자 이상 입력해 주세요.';
+  if (!f.birth) err.birth = '생년월일을 선택해 주세요.';
+  if (!/^01[016789]-\d{3,4}-\d{4}$/.test(f.phone)) err.phone = '010-0000-0000 형식으로 입력해 주세요.';
+  if (!f.consent) err.consent = '검사 결과를 저장하려면 동의가 필요해요.';
+  document.querySelectorAll('.err[data-for]').forEach(el => { el.textContent = err[el.dataset.for] || ''; });
+  const first = Object.keys(err)[0];
+  if (first) { ({ name: $('#fName'), birth: $('#fBirth'), phone: $('#fPhone'), consent: $('#fConsent') })[first].focus(); return false; }
+  return true;
+}
+
+// ───── 1~4. 문항 ─────
+function renderPart(pi) {
+  const p = PARTS[pi];
+  const items = ITEMS.filter(it => it.part === pi);
+  const caps = ['전혀', '아님', '보통', '그럼', '매우'];
+  $('#main').innerHTML = `<section class="sheet">
+    <div class="sheet-head"><h2>${p.title} <span class="mono" style="color:var(--muted);font-size:var(--s-xs);font-weight:500">(${items.length}문항)</span></h2><span class="hint">${p.hint}</span></div>
+    <div class="lk legend" aria-hidden="true"><span></span><span></span><div class="opts">${LIKERT.map(l => `<span>${l.replace(' ', '<br>')}</span>`).join('')}</div></div>
+    ${items.map(it => `<div class="lk" id="row${it.no}">
+      <span class="no">${String(it.no).padStart(2, '0')}</span>
+      <span class="txt" id="t${it.no}">${it.t}</span>
+      <fieldset class="opts" aria-labelledby="t${it.no}">
+        ${[1, 2, 3, 4, 5].map(v => `<label class="opt" title="${LIKERT[v - 1]}"><input type="radio" name="q${it.no}" value="${v}" ${state.answers[it.no - 1] === v ? 'checked' : ''} aria-label="${LIKERT[v - 1]}"><span class="bubble">${v}</span><span class="cap">${caps[v - 1]}</span></label>`).join('')}
+      </fieldset>
+    </div>`).join('')}
+  </section>`;
+  $('#main').onchange = e => {
+    if (e.target.type !== 'radio') return;
+    const no = +e.target.name.slice(1);
+    state.answers[no - 1] = +e.target.value;
+    $('#row' + no).classList.remove('missing');
+    persist(); updateBar();
+  };
+}
+function firstMissing(pi) { return ITEMS.find(it => it.part === pi && !state.answers[it.no - 1]); }
+
+// ───── 5. 결과 ─────
+function renderResult() {
+  const res = result;
+  const top = res.jobs.slice(0, 3);
+  $('#main').innerHTML = `<div class="result">
+    <div class="saved" id="saved"></div>
+    <div class="tools">
+      <button class="btn" type="button" id="btnCopy">결과 텍스트 복사</button>
+      <button class="btn" type="button" id="btnNew">다음 학생 검사 시작</button>
+    </div>
+    ${profilePanel(res)}
+    <section class="panel" style="display:grid;gap:12px">
+      <div><span class="eyebrow">Part 1</span><h2 style="font-size:var(--s-lg)">기초 소양</h2></div>
+      ${basicsGrid(res.basics)}
+      <p class="note">IT를 배우기 시작할 때 필요한 기본기예요. '키워 가요' 영역은 수업 초반에 함께 채워 가면 돼요.</p>
+    </section>
+    <section class="top3"><h2>잘 맞는 직무 TOP 3</h2>${top.map((r, i) => jobCard(r, i + 1)).join('')}</section>
+    <section class="all">
+      <h2>다른 직무도 살펴보기</h2>
+      <p class="note">적합도 순으로 정렬했어요. 누르면 자세한 정보가 열려요.</p>
+      ${res.jobs.slice(3).map(r => `<details><summary><span class="nm"><b>${r.job.name}</b><span style="color:${CATS[r.job.cat].color}">${CATS[r.job.cat].name}</span>${r.job.ext ? '<span style="color:var(--mark)">AI 추가</span>' : ''}</span><span class="t"><i style="width:${r.pct}%"></i></span><span class="v mono">${r.pct}%</span></summary>${jobCard(r, 0)}</details>`).join('')}
+    </section>
+  </div>`;
+  renderSaved();
+  $('#btnCopy').onclick = copyResult;
+  $('#btnNew').onclick = startOver;
+}
+function renderSaved() {
+  const el = $('#saved'); if (!el) return;
+  const s = saveState;
+  el.className = 'saved' + (s === 'ok' ? ' ok' : s === 'fail' ? ' fail' : '');
+  el.innerHTML = s === 'ok' ? '결과를 저장했어요. 담당 멘토가 상담할 때 이 결과를 함께 볼 수 있어요.'
+    : s === 'saving' ? '결과를 저장하는 중이에요…'
+    : s === 'off' ? '미리보기 모드라서 결과를 저장하지 않았어요. (저장 주소가 설정되지 않음)'
+    : `<span>결과를 저장하지 못했어요. ${esc(saveError)}</span><button class="btn" type="button" id="btnRetry">다시 저장</button>`;
+  const r = $('#btnRetry'); if (r) r.onclick = submit;
+}
+
+let saveError = '';
+async function submit() {
+  if (!window.API.configured()) { saveState = 'off'; renderSaved(); return; }
+  saveState = 'saving'; renderSaved();
+  const r = result, round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 100)]));
+  try {
+    await window.API.post({
+      action: 'submit', version: VERSION,
+      name: state.info.name, birth: state.info.birth, phone: state.info.phone, affiliation: state.info.affiliation, consent: true,
+      answers: state.answers.join(''),
+      top: r.jobs.slice(0, 3).map(x => ({ id: x.job.id, name: x.job.name, pct: x.pct })),
+      axes: round(r.axes), basics: round(r.basics), ai: Math.round(r.aiScore * 100),
+    });
+    saveState = 'ok';
+    // 저장이 끝나면 이 기기에 남은 개인정보를 지움
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
+  } catch (e) { saveState = 'fail'; saveError = e.message; }
+  renderSaved();
+}
+
+function resultText() {
+  const r = result;
+  return ['[IT·AI 진로적성검사 결과]', `${state.info.name} · 검사일 ${new Date().toLocaleDateString('ko-KR')}`,
+    ...r.jobs.slice(0, 3).map((x, i) => `${i + 1}위 ${x.job.name} (${x.pct}%)`)].join('\n');
+}
+function copyResult() {
+  const text = resultText();
+  const fallback = () => {
+    if (!$('#copyBox')) $('#main .tools').insertAdjacentHTML('afterend', '<textarea id="copyBox" readonly aria-label="결과 텍스트" style="width:100%;min-height:7rem;font:inherit;font-size:var(--s-xs);padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--fg)"></textarea>');
+    const b = $('#copyBox'); b.value = text; b.focus(); b.select(); toast('텍스트를 선택해 두었어요. Ctrl+C로 복사하세요');
+  };
+  try { navigator.clipboard.writeText(text).then(() => toast('결과를 복사했어요'), fallback); } catch (e) { fallback(); }
+}
+function startOver() {
+  state = { step: 0, info: { name: '', birth: '', phone: '', affiliation: '', consent: false }, answers: Array(ITEMS.length).fill(0) };
+  result = null; saveState = null;
+  try { sessionStorage.removeItem(KEY); } catch (e) {}
+  go(0);
+}
+
+// ───── 흐름 ─────
+function updateBar() {
+  const done = state.answers.filter(Boolean).length;
+  $('#barFill').style.width = (done / ITEMS.length * 100) + '%';
+  const s = state.step;
+  $('#barLabel').innerHTML = s === 0 ? '정보를 입력하면 검사를 시작해요'
+    : `<b class="mono">${done}</b> / ${ITEMS.length}문항 응답` + (s <= PARTS.length ? ` · ${PARTS[s - 1].title.split('.')[0]}` : '');
+  $('#btnPrev').hidden = s === 0 || s === RESULT_STEP;
+  $('#btnNext').textContent = s === 0 ? '검사 시작' : s === PARTS.length ? '결과 보기' : '다음';
+  $('#bar').hidden = s === RESULT_STEP;
+}
+function go(step) {
+  state.step = step; persist();
+  renderSteps();
+  if (step === 0) renderInfo();
+  else if (step <= PARTS.length) renderPart(step - 1);
+  else renderResult();
+  updateBar();
+  window.scrollTo({ top: 0 });
+}
+function next() {
+  const s = state.step;
+  if (s === 0) { if (validateInfo()) go(1); return; }
+  const miss = firstMissing(s - 1);
+  if (miss) {
+    ITEMS.filter(it => it.part === s - 1 && !state.answers[it.no - 1]).forEach(it => $('#row' + it.no).classList.add('missing'));
+    $('#row' + miss.no).scrollIntoView({ block: 'center' });
+    toast(`${miss.no}번 문항에 아직 답하지 않았어요`);
+    return;
+  }
+  if (s < PARTS.length) { go(s + 1); return; }
+  result = score(state.answers);
+  go(RESULT_STEP);
+  submit();
+}
+$('#btnNext').onclick = next;
+$('#btnPrev').onclick = () => { if (state.step === 0) return; if (state.step === 1) { go(0); return; } go(state.step - 1); };
+$('#btnDemo').onclick = () => {
+  state.answers = state.answers.map(() => 1 + Math.floor(Math.random() * 5));
+  if (!state.info.name) state.info = { name: '테스트 학생', birth: '2008-03-01', phone: '010-0000-0000', affiliation: '예시', consent: true };
+  persist(); go(state.step || 1); toast('예시 응답을 채웠어요');
+};
+
+// 새로고침했을 때 결과 단계가 남아 있다면 저장이 끝나지 않은 것 (저장되면 진행 상태를 지우므로)
+if (state.step === RESULT_STEP) {
+  result = score(state.answers);
+  if (window.API.configured()) { saveState = 'fail'; saveError = '저장이 끝나기 전에 페이지를 새로고침했어요.'; } else saveState = 'off';
+}
+go(state.step);
+</script>
+</body>
+</html>

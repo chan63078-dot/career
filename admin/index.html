@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>진로적성검사 관리자</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/common.css">
+<style>
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; display: grid; gap: 20px; }
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.top h1 { font-size: var(--s-lg); }
+.top .who { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.login { max-width: 420px; width: 100%; margin: 6vh auto 0; display: grid; gap: 14px; }
+.login h1 { font-size: var(--s-lg); }
+.notice { border: 1px solid var(--warn); color: var(--fg); background: var(--paper); border-radius: 6px; padding: 12px 14px; display: grid; gap: 6px; font-size: var(--s-xs); }
+.notice b { color: var(--warn); }
+
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 2fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.kpis > div { background: var(--paper); padding: 14px 16px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.kpis .n { font-size: var(--s-xs); color: var(--muted); }
+.kpis .v { font-family: var(--font-mono); font-size: var(--s-xl); font-weight: 600; line-height: 1.1; }
+.dist { display: grid; gap: 4px; }
+.dist .bar-row { grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 2rem; }
+.dist .bar-row .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar input, .toolbar select { font: inherit; font-size: var(--s-xs); color: var(--fg); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.toolbar input { flex: 1; min-width: 180px; }
+.toolbar .count { font-size: var(--s-xs); color: var(--muted); margin-left: auto; }
+
+.table-box { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
+table.list { width: 100%; border-collapse: collapse; font-size: var(--s-xs); min-width: 940px; }
+table.list th { text-align: left; font-weight: 500; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--bg); }
+table.list td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.list tbody tr { cursor: pointer; }
+table.list tbody tr:hover { background: var(--bg); }
+table.list tbody tr:last-child td { border-bottom: 0; }
+table.list .nm { font-weight: 700; font-size: var(--s-sm); }
+table.list .job1 { font-weight: 500; }
+table.list .p { font-family: var(--font-mono); color: var(--ink); }
+table.list .memo-dot { color: var(--mark); }
+.empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+.sample-tag { font-size: var(--s-xs); color: var(--mark); border: 1px solid var(--mark); border-radius: 999px; padding: 1px 8px; }
+
+dialog { border: 0; padding: 0; background: transparent; width: min(980px, calc(100% - 24px)); max-height: calc(100% - 24px); color: var(--fg); }
+dialog::backdrop { background: rgb(10 14 20 / .55); }
+.detail { background: var(--bg); border-radius: 6px; display: grid; gap: 16px; padding: 18px; }
+.detail-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.detail-head h2 { font-size: var(--s-lg); }
+.detail-head dl { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--s-xs); }
+.detail-head dt { color: var(--muted); display: inline; }
+.detail-head dd { margin: 0 0 0 4px; display: inline; font-weight: 500; }
+.jobs5 { display: grid; gap: 6px; }
+.jobs5 .bar-row { grid-template-columns: 1.4rem minmax(0, 13rem) minmax(0, 1fr) 2.6rem; }
+.memo { display: grid; gap: 8px; }
+.memo textarea { min-height: 5.5rem; resize: vertical; }
+.memo .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.answers { display: grid; gap: 10px; }
+.answers h4 { font-size: var(--s-xs); color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+.ans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(3.4rem, 1fr)); gap: 4px; }
+.ans-grid span { font-family: var(--font-mono); font-size: var(--s-xs); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; display: flex; justify-content: space-between; background: var(--paper); }
+.ans-grid span b { color: var(--muted); font-weight: 500; }
+.ans-grid span.hi { border-color: var(--ink); }
+.ans-grid span.lo { color: var(--muted); }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: var(--s-xs); color: var(--mark); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+
+@media (max-width: 760px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpis > div.dist-box { grid-column: 1 / -1; }
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .jobs5 .bar-row { grid-template-columns: 1.4rem minmax(0, 1fr) 2.6rem; }
+  .jobs5 .bar-row .t { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<dialog id="dlg" aria-label="학생 결과 상세"></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/data.js"></script>
+<script src="../assets/render.js"></script>
+<script src="../assets/api.js"></script>
+<script>
+const { PARTS, ITEMS, LIKERT, JOBS, AXES, BASICS, score } = window.CAREER;
+const { esc, profilePanel, basicsGrid } = window.RENDER;
+const CFG = window.APP_CONFIG || {};
+const $ = s => document.querySelector(s);
+const PW_KEY = 'itai-admin-pw';
+
+let rows = [], sample = false, password = '';
+let filt = { q: '', job: '', period: 'all' };
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2200); }
+
+// ───── 로그인 ─────
+function renderLogin(message) {
+  const configured = window.API.configured();
+  $('#app').innerHTML = `<form class="login panel" id="loginForm">
+    <span class="eyebrow">${esc(CFG.ACADEMY || '')} 관리자</span>
+    <h1>진로적성검사 결과 관리</h1>
+    ${configured ? '' : `<div class="notice"><b>저장 주소가 아직 설정되지 않았어요.</b><span>assets/config.js의 API_URL에 Apps Script 웹 앱 주소를 넣으면 실제 결과를 볼 수 있어요. 설정 방법은 README.md에 있어요.</span></div>`}
+    <div class="field"><label for="pw">관리자 비밀번호</label><input id="pw" type="password" autocomplete="current-password" ${configured ? '' : 'disabled'}><span class="err" id="pwErr">${esc(message || '')}</span></div>
+    <button class="btn primary" type="submit" ${configured ? '' : 'disabled'}>로그인</button>
+    <button class="btn" type="button" id="btnSample">예시 데이터로 화면 미리보기</button>
+  </form>`;
+  $('#loginForm').onsubmit = async e => {
+    e.preventDefault();
+    password = $('#pw').value;
+    if (!password) { $('#pwErr').textContent = '비밀번호를 입력해 주세요.'; return; }
+    await load(true);
+  };
+  $('#btnSample').onclick = () => { sample = true; rows = sampleRows(); renderDash(); };
+  if (configured) $('#pw').focus();
+}
+
+async function load(fromLogin) {
+  try {
+    const data = await window.API.post({ action: 'list', password });
+    rows = data.rows; sample = false;
+    try { sessionStorage.setItem(PW_KEY, password); } catch (e) {}
+    renderDash();
+    if (!fromLogin) toast('목록을 새로 불러왔어요');
+  } catch (e) {
+    try { sessionStorage.removeItem(PW_KEY); } catch (x) {}
+    if (['unauthorized', 'locked', 'not_configured'].includes(e.code) || fromLogin) renderLogin(e.message);
+    else toast(e.message);
+  }
+}
+
+function logout() { password = ''; rows = []; try { sessionStorage.removeItem(PW_KEY); } catch (e) {} renderLogin(); }
+
+// ───── 목록 ─────
+const today = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // KST
+function inPeriod(r) {
+  if (filt.period === 'all') return true;
+  const d = r.submittedAt.slice(0, 10);
+  if (filt.period === 'today') return d === today();
+  const days = filt.period === '7' ? 7 : 30;
+  return (Date.parse(today()) - Date.parse(d)) / 86400e3 < days;
+}
+function filtered() {
+  const q = filt.q.replace(/-/g, '').toLowerCase();
+  return rows.filter(r => inPeriod(r)
+    && (!filt.job || (r.top[0] && r.top[0].name === filt.job))
+    && (!q || (r.name + r.phone.replace(/-/g, '') + r.affiliation).toLowerCase().includes(q)));
+}
+
+function renderDash() {
+  const month = today().slice(0, 7);
+  const dist = {};
+  rows.forEach(r => { const n = r.top[0] && r.top[0].name; if (n) dist[n] = (dist[n] || 0) + 1; });
+  const distTop = Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const max = distTop.length ? distTop[0][1] : 1;
+  $('#app').innerHTML = `
+    <header class="top">
+      <div><span class="eyebrow">${esc(CFG.ACADEMY || '')} 관리자</span><h1>진로적성검사 결과 ${sample ? '<span class="sample-tag">예시 데이터</span>' : ''}</h1></div>
+      <div class="who">
+        ${sample ? '' : '<button class="btn" type="button" id="btnReload">새로고침</button>'}
+        <button class="btn" type="button" id="btnCsv">CSV 내려받기</button>
+        <button class="btn" type="button" id="btnOut">${sample ? '미리보기 닫기' : '로그아웃'}</button>
+      </div>
+    </header>
+    <section class="kpis">
+      <div><span class="n">전체 검사 인원</span><span class="v">${rows.length}</span></div>
+      <div><span class="n">이번 달</span><span class="v">${rows.filter(r => r.submittedAt.startsWith(month)).length}</span></div>
+      <div><span class="n">오늘</span><span class="v">${rows.filter(r => r.submittedAt.startsWith(today())).length}</span></div>
+      <div class="dist-box"><span class="n">1위로 가장 많이 나온 직무</span>
+        <div class="dist">${distTop.length ? distTop.map(([n, c]) => `<div class="bar-row"><span class="n" title="${esc(n)}">${esc(n)}</span><span class="t"><i style="width:${c / max * 100}%"></i></span><span class="v mono">${c}</span></div>`).join('') : '<span class="note">아직 결과가 없어요</span>'}</div>
+      </div>
+    </section>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="이름 · 연락처 · 소속 검색" value="${esc(filt.q)}" aria-label="검색">
+      <select id="fJob" aria-label="1위 직무로 거르기"><option value="">1위 직무 전체</option>${JOBS.map(j => `<option ${filt.job === j.name ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}</select>
+      <select id="fPeriod" aria-label="기간">${[['all', '전체 기간'], ['today', '오늘'], ['7', '최근 7일'], ['30', '최근 30일']].map(([v, t]) => `<option value="${v}" ${filt.period === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="table-box"><table class="list">
+      <thead><tr><th>검사일시</th><th>이름</th><th>생년월일</th><th>연락처</th><th>소속</th><th>1위 직무</th><th>2위</th><th>3위</th><th>메모</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>`;
+  renderRows();
+  $('#q').oninput = e => { filt.q = e.target.value; renderRows(); };
+  $('#fJob').onchange = e => { filt.job = e.target.value; renderRows(); };
+  $('#fPeriod').onchange = e => { filt.period = e.target.value; renderRows(); };
+  $('#btnCsv').onclick = downloadCsv;
+  $('#btnOut').onclick = logout;
+  if (!sample) $('#btnReload').onclick = () => load(false);
+}
+
+function renderRows() {
+  const list = filtered();
+  $('#count').textContent = `${list.length}명 표시 / 전체 ${rows.length}명`;
+  $('#tbody').innerHTML = list.length ? list.map(r => `<tr data-id="${esc(r.id)}" tabindex="0">
+    <td class="mono">${esc(r.submittedAt.slice(0, 16))}</td>
+    <td class="nm">${esc(r.name)}</td>
+    <td class="mono">${esc(r.birth)}</td>
+    <td class="mono">${esc(r.phone)}</td>
+    <td>${esc(r.affiliation)}</td>
+    <td><span class="job1">${esc(r.top[0] ? r.top[0].name : '')}</span> <span class="p">${r.top[0] ? r.top[0].pct + '%' : ''}</span></td>
+    <td>${esc(r.top[1] ? r.top[1].name : '')}</td>
+    <td>${esc(r.top[2] ? r.top[2].name : '')}</td>
+    <td>${r.memo ? '<span class="memo-dot" title="상담 메모 있음">●</span>' : ''}</td>
+  </tr>`).join('') : `<tr><td colspan="9" class="empty">${rows.length ? '조건에 맞는 학생이 없어요.' : '아직 저장된 검사 결과가 없어요. 학생이 검사를 마치면 여기에 나타나요.'}</td></tr>`;
+  $('#tbody').onclick = e => { const tr = e.target.closest('tr[data-id]'); if (tr) openDetail(tr.dataset.id); };
+  $('#tbody').onkeydown = e => { const tr = e.target.closest('tr[data-id]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(tr.dataset.id); } };
+}
+
+// ───── 상세 ─────
+function openDetail(id) {
+  const r = rows.find(x => x.id === id); if (!r) return;
+  const ans = String(r.answers || '').split('').map(Number);
+  const res = ans.length === ITEMS.length ? score(ans) : null;
+  const dlg = $('#dlg');
+  dlg.innerHTML = `<div class="detail">
+    <div class="detail-head">
+      <div>
+        <h2>${esc(r.name)}</h2>
+        <dl><div><dt>검사일시</dt><dd>${esc(r.submittedAt)}</dd></div><div><dt>생년월일</dt><dd>${esc(r.birth)}</dd></div><div><dt>연락처</dt><dd>${esc(r.phone)}</dd></div>${r.affiliation ? `<div><dt>소속</dt><dd>${esc(r.affiliation)}</dd></div>` : ''}<div><dt>동의</dt><dd>${esc(r.consentAt || '')}</dd></div></dl>
+      </div>
+      <button class="btn" type="button" id="btnClose">닫기</button>
+    </div>
+    ${res ? profilePanel(res) : '<p class="note">이 결과는 다른 검사 버전으로 저장돼서 상세 분석을 다시 계산할 수 없어요.</p>'}
+    <div class="two">
+      <section class="panel" style="display:grid;gap:10px"><h3 style="font-size:var(--s-md)">기초 소양</h3>${res ? basicsGrid(res.basics) : ''}</section>
+      <section class="panel" style="display:grid;gap:10px"><h3 style="font-size:var(--s-md)">직무 적합도 TOP 5</h3>
+        <div class="jobs5">${res ? res.jobs.slice(0, 5).map((x, i) => `<div class="bar-row ${i === 0 ? 'top' : ''}"><span class="mono" style="color:var(--ink)">${i + 1}</span><span class="n">${esc(x.job.name)}</span><span class="t"><i style="width:${x.pct}%"></i></span><span class="v mono">${x.pct}%</span></div>`).join('') : r.top.map((t, i) => `<div class="bar-row"><span>${i + 1}</span><span class="n">${esc(t.name)}</span><span class="t"><i style="width:${t.pct}%"></i></span><span class="v mono">${t.pct}%</span></div>`).join('')}</div>
+      </section>
+    </div>
+    <section class="panel memo">
+      <label for="memo" style="font-weight:700">상담 메모</label>
+      <textarea id="memo" class="field" style="font:inherit;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:9px 11px" placeholder="상담 내용, 희망 과정, 다음 연락일 등">${esc(r.memo || '')}</textarea>
+      <div class="row"><button class="btn primary" type="button" id="btnMemo">메모 저장</button><span class="note" id="memoState"></span></div>
+    </section>
+    ${res ? `<details class="panel answers"><summary style="cursor:pointer;font-weight:700">문항별 응답 보기 (1 전혀 아니다 ~ 5 매우 그렇다)</summary>
+      ${PARTS.map((p, pi) => `<div><h4>${esc(p.title)}</h4><div class="ans-grid">${ITEMS.filter(it => it.part === pi).map(it => `<span class="${ans[it.no - 1] >= 4 ? 'hi' : ans[it.no - 1] <= 2 ? 'lo' : ''}" title="${esc(it.t)}"><b>${it.no}</b>${ans[it.no - 1]}</span>`).join('')}</div></div>`).join('')}
+      <p class="note">숫자 칸에 마우스를 올리면 문항 내용이 보여요. 파란 테두리는 '그렇다' 쪽 응답이에요.</p>
+    </details>` : ''}
+    <div class="row" id="delBox"><button class="btn danger" type="button" id="btnDel">이 결과 삭제</button></div>
+  </div>`;
+  dlg.showModal();
+  dlg.scrollTop = 0;
+  $('#btnClose').onclick = () => dlg.close();
+  $('#btnMemo').onclick = () => saveMemo(r);
+  $('#btnDel').onclick = () => {
+    $('#delBox').innerHTML = `<div class="confirm"><span>${esc(r.name)} 학생의 결과와 개인정보를 삭제할까요? 되돌릴 수 없어요.</span><button class="btn danger" type="button" id="btnDelYes">삭제</button><button class="btn" type="button" id="btnDelNo">취소</button></div>`;
+    $('#btnDelNo').onclick = () => openDetail(id);
+    $('#btnDelYes').onclick = () => removeRow(r);
+  };
+}
+$('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+async function saveMemo(r) {
+  const memo = $('#memo').value;
+  $('#memoState').textContent = '저장하는 중…';
+  try {
+    if (!sample) await window.API.post({ action: 'memo', password, id: r.id, memo });
+    r.memo = memo; $('#memoState').textContent = '저장했어요'; renderRows();
+  } catch (e) { $('#memoState').textContent = e.message; }
+}
+async function removeRow(r) {
+  try {
+    if (!sample) await window.API.post({ action: 'delete', password, id: r.id });
+    rows = rows.filter(x => x.id !== r.id);
+    $('#dlg').close(); renderDash(); toast('삭제했어요');
+  } catch (e) { toast(e.message); }
+}
+
+// ───── CSV ─────
+function downloadCsv() {
+  const list = filtered();
+  const head = ['검사일시', '이름', '생년월일', '연락처', '소속', '1위', '1위%', '2위', '2위%', '3위', '3위%', ...BASICS.map(b => b.name), ...AXES.map(a => a.name), 'AI관심도', '상담메모'];
+  const cell = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const lines = list.map(r => [r.submittedAt, r.name, r.birth, r.phone, r.affiliation,
+    ...[0, 1, 2].flatMap(i => r.top[i] ? [r.top[i].name, r.top[i].pct] : ['', '']),
+    ...BASICS.map(b => (r.basics || {})[b.key] ?? ''), ...AXES.map(a => (r.axes || {})[a.key] ?? ''), r.ai, r.memo].map(cell).join(','));
+  const blob = new Blob(['﻿' + [head.join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `진로적성검사_${today()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ───── 예시 데이터 (미리보기 전용, 저장되지 않음) ─────
+function sampleRows() {
+  const names = ['김민준', '이서연', '박도윤', '최지우', '정하준', '강수아', '윤시우', '임예린'];
+  const affs = ['○○고 2학년', '○○고 3학년', '대학생', '직장인', '○○고 1학년', '', '대학생', '○○고 2학년'];
+  let seed = 7; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  return names.map((name, i) => {
+    const ans = ITEMS.map(() => 1 + Math.floor(rnd() * 5));
+    const res = score(ans), round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 100)]));
+    const d = new Date(Date.now() + 9 * 3600e3 - i * 2.3 * 86400e3).toISOString();
+    return { id: 'sample-' + i, submittedAt: d.slice(0, 10) + ' ' + d.slice(11, 19), name, birth: `200${(i % 9)}-0${1 + (i % 9)}-1${i % 10}`, phone: `010-0000-00${String(i).padStart(2, '0')}`, affiliation: affs[i], consentAt: d.slice(0, 10),
+      top: res.jobs.slice(0, 3).map(x => ({ name: x.job.name, pct: x.pct })), axes: round(res.axes), basics: round(res.basics), ai: Math.round(res.aiScore * 100), answers: ans.join(''), memo: i === 1 ? '데이터 분석 과정 관심. 다음 주 재상담.' : '' };
+  });
+}
+
+// ───── 시작 ─────
+try { password = sessionStorage.getItem(PW_KEY) || ''; } catch (e) {}
+if (password && window.API.configured()) { $('#app').innerHTML = '<p class="note">불러오는 중…</p>'; load(true); } else renderLogin();
+</script>
+</body>
+</html>
